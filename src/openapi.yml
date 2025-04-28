@@ -1,0 +1,217 @@
+openapi: 3.0.0
+info:
+  title: Elevator System API
+  description: API for managing elevator system operations
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000
+    description: Local development server
+
+paths:
+  /api/elevators:
+    get:
+      tags:
+        - Elevators
+      summary: Get status of all elevators
+      description: Returns information about all elevators in the system
+      responses:
+        '200':
+          description: Successfully retrieved elevator information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Elevator'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/elevators/{id}:
+    get:
+      tags:
+        - Elevators
+      summary: Get status of a specific elevator
+      description: Returns information about a specific elevator by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: Elevator ID
+      responses:
+        '200':
+          description: Successfully retrieved elevator information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/Elevator'
+        '404':
+          description: Elevator not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/elevators/request:
+    post:
+      tags:
+        - Elevators
+      summary: Request an elevator
+      description: Request an elevator from a specific floor to go to another floor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - fromFloor
+                - toFloor
+              properties:
+                fromFloor:
+                  type: integer
+                  description: The floor where the request is made
+                toFloor:
+                  type: integer
+                  description: The destination floor
+      responses:
+        '200':
+          description: Elevator request successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      elevatorId:
+                        type: integer
+                      request:
+                        $ref: '#/components/schemas/ElevatorRequest'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/elevators/stop-cron:
+    post:
+      tags:
+        - Elevators
+      summary: Stop scheduled tasks
+      description: Stop all scheduled tasks of the elevator system
+      responses:
+        '200':
+          description: Successfully stopped scheduled tasks
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/elevators/start-cron:
+    post:
+      tags:
+        - Elevators
+      summary: Restart scheduled tasks
+      description: Restart all scheduled tasks of the elevator system
+      responses:
+        '200':
+          description: Successfully restarted scheduled tasks
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    Elevator:
+      type: object
+      properties:
+        id:
+          type: integer
+        currentFloor:
+          type: integer
+        targetFloor:
+          type: integer
+        status:
+          type: string
+          enum: [IDLE, MOVING_UP, MOVING_DOWN]
+        requests:
+          type: array
+          items:
+            $ref: '#/components/schemas/ElevatorRequest'
+
+    ElevatorRequest:
+      type: object
+      properties:
+        fromFloor:
+          type: integer
+        toFloor:
+          type: integer
+        timestamp:
+          type: string
+          format: date-time
+
+    Error:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        error:
+          type: string
+          description: Detailed error message (only in development mode) 
